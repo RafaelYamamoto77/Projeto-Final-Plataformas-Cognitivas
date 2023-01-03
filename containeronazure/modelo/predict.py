@@ -19,6 +19,23 @@ class NpEncoder(json.JSONEncoder):
             return super(NpEncoder, self).default(obj)
 
 
+def criaRetorno(lista):
+    retorno = []
+    for i in lista:
+        if i == 0:
+            retorno.append([i,"nenhum risco","0%"])
+        elif i == 1:
+            retorno.append([i,"risco baixo","31%"])
+        elif i == 2:
+            retorno.append([i,"risco medio","49%"])
+        elif i== 3:
+            retorno.append([i,"risco alto","63%"])
+        elif i == 4:
+            retorno.append([i, "risco total","100%"])
+        else:
+            retorno.append([i, "nao identificado","nao identificado"])
+    return retorno
+
 app = Flask(__name__)
 app.json_encoder = NpEncoder
 global meumodelo
@@ -41,6 +58,11 @@ def init():
         # meumodelo = joblib.load( './nome_arquivo.pkl')
         print("Carregando modelo (warming model).")
         meumodelo = joblib.load('./modelo/model.pkl')
+        mydf = pd.read_csv('C:/Users/rafae/Documents/GitHub/plataformas-cognitivas-local/datasets/datasetlimpo.csv')
+        filtrados = mydf.sample(3)
+        filtrados = filtrados
+        conteudo = filtrados.to_json()
+        run(conteudo)
     except Exception as err:
         print(f"Exception: \n{err}")
 
@@ -60,8 +82,8 @@ def run(data):
             return "Dados de chamada da API estão incorretos.", 400
 
         prediction = meumodelo.predict(campos)
-
-        ret = json.dumps({'prediction': list(prediction)}, cls=NpEncoder)
+        retorno = criaRetorno(prediction)
+        ret = json.dumps({'prediction': retorno}, cls=NpEncoder)
         print(ret)
 
         return app.response_class(response=ret, mimetype='application/json')
